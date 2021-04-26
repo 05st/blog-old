@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import avatar from './res/avatar.png';
 import github from './res/github.png';
+import twitter from './res/twitter.png';
 
 function NavLink(props) {
   return (
@@ -25,6 +26,9 @@ function TopBar() {
       <NavLink link="" hover={true}>About</NavLink>
       <NavLink link="https://github.com/05st" newtab={true}>
         <img class="transition duration-100 opacity-50 hover:opacity-100" src={github} alt="GitHub"/>
+      </NavLink>
+      <NavLink link="https://twitter.com/__05st" newtab={true}>
+        <img style={{width: 32, height:32}} class="transition duration-100 opacity-50 hover:opacity-100" src={twitter} alt="Twitter"/>
       </NavLink>
     </div>
   );
