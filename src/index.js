@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
+import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import gfm from "remark-gfm"
 import "github-markdown-css";
@@ -40,7 +41,7 @@ function PostListing(props) {
   return (
     <div class="w-1/2 flex p-2 shadow">
       <div class="items-center">
-        <button onClick={() => props.func(props.id)} class="font-bold underline">{props.title}</button>
+        <Link class="font-bold underline" to={"/"+props.id}>{props.title}</Link>
         <p class="text-sm">{props.date}</p>
       </div>
       <p class="pl-4">{props.desc}</p>
@@ -51,7 +52,7 @@ function PostListing(props) {
 function PostList(props) {
   return (
     <div class="w-full flex flex-col items-center p-6 space-y-6 relative h-auto top-12">
-      {props.data.map((p, i) => <PostListing title={p.title} date={p.date} desc={p.description} func={props.func} id={i}/>)}
+      {props.data.map((p, i) => <PostListing title={p.title} date={p.date} desc={p.description} id={i}/>).reverse()}
     </div>
   );
 }
@@ -78,28 +79,26 @@ function Post(props) {
 
 function App() {
   const [posts, setPosts] = useState(0);
-  const [curr, setCurr] = useState(-1);
 
   useEffect(() => {
     db.collection("posts").get().then((querySnapshot) => {
       let ps = [];
       querySnapshot.forEach((doc) => ps.push(doc.data()))
       return ps;
-    }).then((ps) => setPosts(ps.reverse()));
+    }).then((ps) => setPosts(ps));
   }, []);
-
-  let content;
-  if (curr >= 0 && posts) {
-    content = <Post data={posts[curr]}/>;
-  } else if (posts) {
-    content = <PostList data={posts} func={(id) => {
-      setCurr(id);
-    }}/>;
-  }
 
   return (<>
     <Topbar />
-    {content ? content : <div class="relative flex flex-col pt-16 w-full items-center"><p class="font-bold">Loading</p></div>}
+    {posts
+      ? <Router>
+        <Switch>
+          {posts.map((p, i) => <Route path={"/"+i}><Post data={p}/></Route>)}
+          <Route path="/"><PostList data={posts}/></Route>
+        </Switch>
+      </Router>
+      : <div class="relative flex flex-col pt-16 w-full items-center"><p class="font-bold">Loading</p></div>
+    }
   </>);
 }
 
