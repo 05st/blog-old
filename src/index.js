@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
-import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
+import { HashRouter as Router, Switch, Route, Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import gfm from "remark-gfm"
 import "github-markdown-css";
@@ -41,7 +41,7 @@ function PostListing(props) {
   return (
     <div class="w-1/2 flex p-2 shadow">
       <div class="items-center">
-        <Link class="font-bold underline" to={"/"+props.id}>{props.title}</Link>
+        <Link class="font-bold underline" to={'/' + props.id}>{props.title}</Link>
         <p class="text-sm">{props.date}</p>
       </div>
       <p class="pl-4">{props.desc}</p>
