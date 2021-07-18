@@ -72,52 +72,17 @@ function CodeBlock({node, inline, className, children, ...props}) {
 
 function Comment(props) {
   return (
-    <div class="w-full shadow-lg rounded p-6 bg-gray-100">
+    <div class="w-full shadow-lg rounded p-6 bg-gray-200">
       <h2><b>{props.author}</b><span class="text-sm pl-2">{props.date}</span></h2>
       <p class="pt-2">{props.content}</p>
     </div>
   );
 }
 
-function CommentForm(props) {
-  const [name, setName] = useState("");
-  const [content, setContent] = useState("");
-
-  function postComment(e) {
-    e.preventDefault();
-    if (name && content) {
-      let curDate = new Date();
-      let dd = String(curDate.getDate()).padStart(2, '0');
-      let mm = String(curDate.getMonth() + 1).padStart(2, '0');
-      let yyyy = curDate.getFullYear();
-
-      props.commentdb.add({
-        author: name,
-        content: content,
-        date: (yyyy + "-" + mm + "-" + dd)
-      });
-
-      setName("");
-      setContent("");
-
-      props.func(1);
-    }
-  }
-
-  return (
-    <form onSubmit={postComment} class="w-full flex flex-col space-y-4 shadow-lg rounded p-6 bg-gray-100">
-        <input onChange={(e) => setName(e.target.value)} class="p-2 w-1/4" type="text" placeholder="Name" value={name}/>
-        <textarea onChange={(e) => setContent(e.target.value)} class="p-2" placeholder="Comment" value={content}/>
-        <div class="w-full flex flex-col items-center">
-          <input type="submit" class="p-2 justify-center w-1/6 bg-gray-200" value="Submit"/>
-        </div>
-    </form>
-  );
-}
-
 function CommentList(props) {
   return (
-    <div class="flex flex-col w-full items-center h-auto space-y-6 p-6">
+    <div class="flex flex-col w-1/2 items-center h-auto space-y-6 p-6">
+      <Comment author="Test Author" date="2021-07-18" content="comment content test for design."/>
       {props.comments.map((c, i) => <Comment author={c.author} date={c.date} content={c.content}/>)}
     </div>
   );
@@ -125,24 +90,13 @@ function CommentList(props) {
 
 function Post(props) {
   const [markdown, setMarkdown] = useState("");
-  const [comments, setComments] = useState([]);
-  const [renderState, rerender] = useState(0);
 
   useEffect(() => {
-    console.log(renderState);
     fetch(props.data.content).then((r) => {
       if (!r.ok) throw new Error("HTTP Error: " + r.status);
       return r.text();
     }).then((md) => setMarkdown(md));
-
-    db.collection("posts").doc(props.data.id).collection("comments").get().then((querySnapshot) => {
-      let cs = [];
-      querySnapshot.forEach((com) => cs.push(com.data()));
-      return cs;
-    }).then((cs) => setComments(cs));
-  }, [props.data.content, props.data.id, renderState]);
-
-  let commentdb = db.collection("posts").doc(props.data.id).collection("comments");
+  }, [props.data.content]);
 
   return (
     <div class="relative p-6 pt-16 w-full flex flex-col items-center">
@@ -150,26 +104,18 @@ function Post(props) {
       {markdown ? <div class="markdown-body pt-6 w-1/2">
         <ReactMarkdown remarkPlugins={[gfm]} components={{code: CodeBlock}} linkTarget="_blank">{markdown}</ReactMarkdown>
       </div> : <p class="pt-6 font-bold">Loading</p>}
-      <div class="relative pt-6 w-1/2">
-        <h1 class="font-bold text-lg">Comments</h1>
-        <CommentForm func={rerender} commentdb={commentdb} />
-        {comments && <CommentList comments={comments}/>}
-      </div>
+      <CommentList comments={[]}/>
     </div>
   );
 }
 
 function App() {
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState(0);
 
   useEffect(() => {
     db.collection("posts").get().then((querySnapshot) => {
       let ps = [];
-      querySnapshot.forEach((doc) => {
-        let data = doc.data();
-        data["id"] = doc.id;
-        ps.push(data);
-      });
+      querySnapshot.forEach((doc) => ps.push(doc.data()))
       return ps;
     }).then((ps) => setPosts(ps));
   }, []);
