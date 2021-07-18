@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import { HashRouter as Router, Switch, Route, Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
-import gfm from "remark-gfm"
-import "github-markdown-css";
+import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter'
+import {okaidia as syntaxTheme} from "react-syntax-highlighter/dist/esm/styles/prism";
+import gfm from "remark-gfm";
+import "./markdown.css";
 import "./index.css";
 
 import firebase from "firebase/app";
@@ -57,6 +59,17 @@ function PostList(props) {
   );
 }
 
+function CodeBlock({node, inline, className, children, ...props}) {
+  const match = /language-(\w+)/.exec(className || '')
+  return !inline && match ? (
+    <SyntaxHighlighter style={syntaxTheme} language={match[1]} PreTag="div" children={String(children).replace(/\n$/, '')} {...props} />
+  ) : (
+    <code className={className} {...props}>
+      {children}
+    </code>
+  )
+}
+
 function Post(props) {
   const [markdown, setMarkdown] = useState("");
 
@@ -71,7 +84,7 @@ function Post(props) {
     <div class="relative p-6 pt-16 w-full flex flex-col items-center">
       <p class="text-sm text-gray-300">{props.data.title} ({props.data.date})</p>
       {markdown ? <div class="markdown-body pt-6 w-1/2">
-        <ReactMarkdown remarkPlugins={[gfm]} linkTarget="_blank">{markdown}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[gfm]} components={{code: CodeBlock}} linkTarget="_blank">{markdown}</ReactMarkdown>
       </div> : <p class="pt-6 font-bold">Loading</p>}
     </div>
   );
