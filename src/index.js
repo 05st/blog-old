@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import ReactMarkdown from "react-markdown";
-import {Prism as SyntaxHighlighter} from "react-syntax-highlighter";
-import {ghcolors} from "react-syntax-highlighter/dist/esm/styles/prism";
+import gfm from "remark-gfm"
+import "github-markdown-css";
 import "./index.css";
-import "./md.css";
 
 import firebase from "firebase/app";
 import "firebase/firestore";
@@ -21,36 +20,17 @@ let firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 let db = firebase.firestore();
-let loaded_posts = false;
-let loaded_md = false;
-
-async function getPosts() {
-  let posts = [];
-  await db.collection("posts").get().then((querySnapshot) => querySnapshot.forEach((doc) => posts.push(doc.data())));
-  loaded_posts = true;
-  return posts;
-}
-
-async function getMarkdown(link) {
-  let md = "";
-  await fetch(link).then((r) => {
-    if (!r.ok) throw new Error("HTTP Error: " + r.status);
-    md = r.text();
-  });
-  loaded_md = true;
-  return md;
-}
 
 function Topbar() {
   return (
-    <div class="fixed z-20 w-full h-12 flex pl-2 space-x-6 bg-gray-50 shadow items-center text-center">
-      <h1 class="font-bold">blog.stimsina.com</h1>
-      <a href="/">Recent Posts</a>
-      <div class="flex">
-        <input class="w-full rounded pl-2" type="text" placeholder="Search"/>
-        <button class="bg-white w-auto rounded flex justify-end items-center p-2">
-          <i>search</i>
-        </button>
+    <div class="fixed z-20 flex flex-col items-center w-full bg-gray-50 shadow">
+      <div class="flex flex-row items-center h-12 pl-2 space-x-6 text-center">
+        <h1 class="font-bold">blog.stimsina.com</h1>
+        <a href="/">Recent Posts</a>
+        <div class="flex">
+          <input class="w-full pl-2" type="text" placeholder="Search"/>
+          <button class="bg-white w-auto flex justify-end items-center p-2">→</button>
+        </div>
       </div>
     </div>
   );
@@ -58,7 +38,7 @@ function Topbar() {
 
 function PostListing(props) {
   return (
-    <div class="w-full flex p-2 shadow">
+    <div class="w-1/2 flex p-2 shadow">
       <div class="items-center">
         <button onClick={() => props.func(props.id)} class="font-bold underline">{props.title}</button>
         <p class="text-sm">{props.date}</p>
@@ -70,35 +50,28 @@ function PostListing(props) {
 
 function PostList(props) {
   return (
-    <div class="w-full content-center p-6 space-y-6 relative h-auto top-12">
+    <div class="w-full flex flex-col items-center p-6 space-y-6 relative h-auto top-12">
       {props.data.map((p, i) => <PostListing title={p.title} date={p.date} desc={p.description} func={props.func} id={i}/>)}
     </div>
   );
 }
 
-const components = {
-  code({node, inline, className, children, ...props}) {
-    const match = /language-(\w+)/.exec(className || '')
-    return !inline && match ? (
-      <SyntaxHighlighter style={ghcolors} language={match[1]} children={String(children).replace(/\n$/, '')} {...props} />
-    ) : (
-      <code className={className} {...props}>
-        {children}
-      </code>
-    )
-  }
-}
-
 function Post(props) {
   const [markdown, setMarkdown] = useState("");
 
-  if (!loaded_md) getMarkdown(props.data.content).then((c) => setMarkdown(c));
-  console.log(markdown);
+  useEffect(() => {
+    fetch(props.data.content).then((r) => {
+      if (!r.ok) throw new Error("HTTP Error: " + r.status);
+      return r.text();
+    }).then((md) => setMarkdown(md));
+  }, [props.data.content]);
 
   return (
-    <div class="relative top-12 p-6">
+    <div class="relative p-6 pt-16 w-full flex flex-col items-center">
       <p class="text-sm text-gray-300">{props.data.title} ({props.data.date})</p>
-      {markdown && <ReactMarkdown components={components} className="markdown markdown-body pt-6" linkTarget="_blank" children={markdown}/>}
+      {markdown ? <div class="markdown-body pt-6 w-1/2">
+        <ReactMarkdown remarkPlugins={[gfm]} linkTarget="_blank">{markdown}</ReactMarkdown>
+      </div> : <p class="pt-6 font-bold">Loading</p>}
     </div>
   );
 }
@@ -107,21 +80,26 @@ function App() {
   const [posts, setPosts] = useState(0);
   const [curr, setCurr] = useState(-1);
 
-  if (!loaded_posts) getPosts().then((q) => setPosts(q));
+  useEffect(() => {
+    db.collection("posts").get().then((querySnapshot) => {
+      let ps = [];
+      querySnapshot.forEach((doc) => ps.push(doc.data()))
+      return ps;
+    }).then((ps) => setPosts(ps.reverse()));
+  }, []);
 
   let content;
   if (curr >= 0 && posts) {
-    content = <Post data={posts[curr]}/>
+    content = <Post data={posts[curr]}/>;
   } else if (posts) {
     content = <PostList data={posts} func={(id) => {
-      loaded_md = false;
       setCurr(id);
     }}/>;
   }
 
   return (<>
     <Topbar />
-    {content}
+    {content ? content : <div class="relative flex flex-col pt-16 w-full items-center"><p class="font-bold">Loading</p></div>}
   </>);
 }
 
