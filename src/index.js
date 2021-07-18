@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
 import ReactMarkdown from "react-markdown";
+import {Prism as SyntaxHighlighter} from "react-syntax-highlighter";
+import {ghcolors} from "react-syntax-highlighter/dist/esm/styles/prism";
 import "./index.css";
+import "./md.css";
 
 import firebase from "firebase/app";
 import "firebase/firestore";
@@ -40,7 +43,7 @@ async function getMarkdown(link) {
 
 function Topbar() {
   return (
-    <div class="fixed w-full h-12 flex pl-2 space-x-6 bg-gray-50 shadow items-center text-center">
+    <div class="fixed z-20 w-full h-12 flex pl-2 space-x-6 bg-gray-50 shadow items-center text-center">
       <h1 class="font-bold">blog.stimsina.com</h1>
       <a href="/">Recent Posts</a>
       <div class="flex">
@@ -73,6 +76,19 @@ function PostList(props) {
   );
 }
 
+const components = {
+  code({node, inline, className, children, ...props}) {
+    const match = /language-(\w+)/.exec(className || '')
+    return !inline && match ? (
+      <SyntaxHighlighter style={ghcolors} language={match[1]} children={String(children).replace(/\n$/, '')} {...props} />
+    ) : (
+      <code className={className} {...props}>
+        {children}
+      </code>
+    )
+  }
+}
+
 function Post(props) {
   const [markdown, setMarkdown] = useState("");
 
@@ -81,8 +97,8 @@ function Post(props) {
 
   return (
     <div class="relative top-12 p-6">
-      <p class="text-gray-300">{props.data.title} ({props.data.date})</p>
-      {markdown && <ReactMarkdown linkTarget="_blank" children={markdown}/>}
+      <p class="text-sm text-gray-300">{props.data.title} ({props.data.date})</p>
+      {markdown && <ReactMarkdown components={components} className="markdown markdown-body pt-6" linkTarget="_blank" children={markdown}/>}
     </div>
   );
 }
