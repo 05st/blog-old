@@ -41,7 +41,7 @@ function Topbar() {
 
 function PostListing(props) {
   return (
-    <div class="w-1/2 flex p-2 shadow">
+    <div class="lg:w-1/2 w-full flex p-2 shadow">
       <div class="items-center">
         <Link class="font-bold underline" to={'/' + props.id}>{props.title}</Link>
         <p class="text-sm">{props.date}</p>
@@ -147,10 +147,10 @@ function Post(props) {
   return (
     <div class="relative p-6 pt-16 w-full flex flex-col items-center">
       <p class="text-sm text-gray-300">{props.data.title} ({props.data.date})</p>
-      {markdown ? <div class="markdown-body pt-6 w-1/2">
+      {markdown ? <div class="markdown-body pt-6 lg:w-1/2 w-full">
         <ReactMarkdown remarkPlugins={[gfm]} components={{code: CodeBlock}} linkTarget="_blank">{markdown}</ReactMarkdown>
       </div> : <p class="pt-6 font-bold">Loading</p>}
-      <div class="relative pt-6 w-1/2">
+      <div class="relative pt-6 lg:w-1/2 w-full">
         <h1 class="font-bold text-lg">Comments</h1>
         <CommentForm func={rerender} commentdb={commentdb} />
         {comments && <CommentList comments={comments}/>}
