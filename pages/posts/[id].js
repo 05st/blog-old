@@ -34,6 +34,11 @@ export default function Post(props) {
     <>
       <Head>
         <title>{props.title} | Blog</title>
+
+        <meta property="og:title" content={props.title + " | Blog"} key="title"/>
+        <meta property="og:type" content="website"/>
+        <meta property="og:site_name" content="blog.stimsina.com"/>
+        <meta property="og:description" content={props.description}/>
       </Head>
       <div className="relative flex flex-col w-full p-6 top-16 items-center space-y-6">
         <p className="text-sm text-gray-300">{props.title} ({props.date})</p>
@@ -42,7 +47,6 @@ export default function Post(props) {
             <Markdown remarkPlugins={[gfm]} components={{code: CodeBlock}} linkTarget="_blank">{markdown}</Markdown>
           </div>
           : <p className="font-bold text-lg">Loading</p> }
-        
       </div>
     </>
   );
@@ -54,11 +58,14 @@ export async function getServerSideProps({ query }) {
     data["content"] = d.data().content;
     data["title"] = d.data().title;
     data["date"] = d.data().date;
+    data["description"] = d.data().description;
   });
   return {
     props: {
       content: data.content,
       title: data.title,
+      date: data.date,
+      description: data.description,
     }
   };
 }

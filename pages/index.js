@@ -47,6 +47,11 @@ export default function Home() {
     <div className="relative top-20">
       <Head>
         <title>Recent Posts | Blog</title>
+
+        <meta property="og:title" content="Recent Posts | Blog" key="title"/>
+        <meta property="og:type" content="website"/>
+        <meta property="og:site_name" content="blog.stimsina.com"/>
+        <meta property="og:description" content="Posts about computer science, programming, mathematics, or anything else I am currently interested in."/>
       </Head>
       <div className="w-full flex flex-col items-center">
         <PostList />
